@@ -23,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -31,22 +32,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.datetime.Clock
-import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.koin.compose.KoinApplication
 import org.koin.compose.viewmodel.koinViewModel
+import uk.dominikdias.manga.di.appModule
+import uk.dominikdias.manga.di.previewDatabaseModule
 import uk.dominikdias.manga.extensions.toEpochMillis
 import uk.dominikdias.manga.extensions.toLocalDate
-import uk.dominikdias.manga.interfaces.IAddMangaViewModel
-import uk.dominikdias.manga.model.AddMangaFormState
+import uk.dominikdias.manga.theme.AppTheme
 import uk.dominikdias.manga.viewmodel.AddMangaViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,7 +57,8 @@ import uk.dominikdias.manga.viewmodel.AddMangaViewModel
 fun AddMangaScreen(
     onPopBackStack: () -> Unit,
     setTopBar: (TopBarContent) -> Unit,
-    viewModel: IAddMangaViewModel = koinViewModel<AddMangaViewModel>()
+    modifier: Modifier = Modifier,
+    viewModel: AddMangaViewModel = koinViewModel()
 ) {
     val formState by viewModel.formState.collectAsState()
     val showOrderDatePicker by viewModel.showOrderDatePicker.collectAsState()
@@ -128,7 +132,7 @@ fun AddMangaScreen(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
@@ -269,54 +273,30 @@ fun AddMangaScreen(
     }
 }
 
-private class AddMangaScreenDummy() : IAddMangaViewModel {
-    override val formState = MutableStateFlow(AddMangaFormState())
-    override val showOrderDatePicker = MutableStateFlow(false)
-    override val showExpectedDatePicker = MutableStateFlow(false)
-    override val navigationEvent = MutableSharedFlow<Unit>()
-    override fun onTitleChange(newTitle: String) {
-    }
-
-    override fun onVolumeChange(newVolume: String) {
-    }
-
-    override fun onPublisherChange(newPublisher: String) {
-    }
-
-    override fun onStoreChange(newStore: String) {
-    }
-
-    override fun onPriceChange(newPrice: String) {
-    }
-
-    override fun showOrderDatePicker() {
-    }
-
-    override fun dismissShowOrderDatePicker() {
-    }
-
-    override fun showExpectedDatePicker() {
-    }
-
-    override fun dismissShowExpectedDatePicker() {
-    }
-
-    override fun onOrderDateChange(newDate: LocalDate?) {
-    }
-
-    override fun onExpectedPublicationDateChange(newDate: LocalDate?) {
-    }
-
-    override fun saveManga() {
-    }
-}
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
 private fun AddMangaPreview() {
-    AddMangaScreen(
-        onPopBackStack = {},
-        setTopBar = {},
-        viewModel = AddMangaScreenDummy(),
-    )
+    var topBar by remember { mutableStateOf<(@Composable () -> Unit)?>(null) }
+    KoinApplication(
+        application = {
+            modules(previewDatabaseModule(), appModule())
+        }
+    ) {
+        AppTheme {
+            Scaffold(
+                topBar = {
+                    topBar?.invoke()
+                }
+            ) {
+                AddMangaScreen(
+                    modifier = Modifier.padding(it),
+                    onPopBackStack = {},
+                    setTopBar = {
+                        topBar = it
+                    },
+                )
+            }
+        }
+    }
 }

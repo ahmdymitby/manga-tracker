@@ -32,6 +32,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -40,16 +41,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.datetime.Clock
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.koin.compose.KoinApplication
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import uk.dominikdias.manga.data.MangaStatus
+import uk.dominikdias.manga.di.appModule
+import uk.dominikdias.manga.di.previewDatabaseModule
 import uk.dominikdias.manga.extensions.toEpochMillis
 import uk.dominikdias.manga.extensions.toLocalDate
 import uk.dominikdias.manga.viewmodel.EditMangaViewModel
@@ -60,6 +68,7 @@ fun EditMangaScreen(
     mangaId: Long,
     onPopBackStack: () -> Unit,
     setTopBar: (TopBarContent) -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: EditMangaViewModel = koinViewModel(parameters = { parametersOf(mangaId) })
 ) {
     val formState by viewModel.formState.collectAsState()
@@ -164,7 +173,7 @@ fun EditMangaScreen(
         )
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize()) {
         when {
             formState.isLoading -> {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -308,6 +317,27 @@ fun EditMangaScreen(
                     Spacer(Modifier.height(16.dp))
                 }
             }
+        }
+    }
+}
+
+@Composable
+@Preview
+private fun EditMangaScreenPreview() {
+    var topBar by remember { mutableStateOf<(@Composable () -> Unit)?>(null) }
+
+    KoinApplication(application = {
+        modules(previewDatabaseModule(), appModule())
+    }) {
+        Scaffold(
+            topBar = { topBar?.invoke() }
+        ) {
+            EditMangaScreen(
+                mangaId = 1,
+                onPopBackStack = {},
+                setTopBar = { topBar = it },
+                modifier = Modifier.padding(it)
+            )
         }
     }
 }

@@ -24,8 +24,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.koin.compose.KoinApplication
 import org.koin.compose.KoinContext
 import org.koin.compose.viewmodel.koinViewModel
+import uk.dominikdias.manga.di.appModule
+import uk.dominikdias.manga.di.previewDatabaseModule
 import uk.dominikdias.manga.theme.AppTheme
 import uk.dominikdias.manga.viewmodel.MainContentViewModel
 import uk.dominikdias.manga.viewmodel.TopBarViewModel
@@ -160,5 +164,16 @@ fun MainContent(
             }
         }
     }
+}
 
+@Composable
+@Preview
+private fun PreviewMainContent() {
+    KoinApplication(
+        application = {
+            modules(previewDatabaseModule(), appModule())
+        }
+    ) {
+        MainContent()
+    }
 }

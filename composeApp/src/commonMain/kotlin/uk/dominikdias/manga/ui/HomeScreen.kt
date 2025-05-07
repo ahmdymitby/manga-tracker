@@ -17,19 +17,28 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.koin.compose.KoinApplication
 import org.koin.compose.viewmodel.koinViewModel
 import uk.dominikdias.manga.data.Manga
+import uk.dominikdias.manga.di.appModule
+import uk.dominikdias.manga.di.previewDatabaseModule
+import uk.dominikdias.manga.theme.AppTheme
 import uk.dominikdias.manga.viewmodel.HomeViewModel
 
 
@@ -38,6 +47,7 @@ import uk.dominikdias.manga.viewmodel.HomeViewModel
 fun HomeScreen(
     onMangaClick: (mangaId: Long) -> Unit,
     setTopBar: (TopBarContent) -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val isLoading by viewModel.isLoading.collectAsState()
@@ -49,7 +59,7 @@ fun HomeScreen(
         TopAppBar(title = { Text(Home.title) })
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize()) {
         when {
             isLoading -> {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -101,9 +111,7 @@ fun HomeScreen(
                     if (potentiallyDelayedManga.isEmpty() && upcomingManga.isEmpty()) {
                         item {
                             Box(
-                                modifier = Modifier
-                                    .fillParentMaxSize()
-                                    .padding(top = 150.dp),
+                                modifier = Modifier.fillParentMaxSize().align(Alignment.Center),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text("No upcoming or delayed manga found.")
@@ -161,4 +169,27 @@ fun MangaListItem(
             .fillMaxWidth()
             .clickable(onClick = onClick)
     )
+}
+
+@Composable
+@Preview
+private fun PreviewHomeScreen() {
+    var topBar by remember { mutableStateOf<(@Composable () -> Unit)?>(null) }
+    KoinApplication(
+        application = {
+            modules(previewDatabaseModule(), appModule())
+        }
+    ) {
+        AppTheme {
+            Scaffold(
+                topBar = { topBar?.invoke() }
+            ) {
+                HomeScreen(
+                    onMangaClick = {},
+                    setTopBar = { topBar = it },
+                    modifier = Modifier.padding(it)
+                )
+            }
+        }
+    }
 }

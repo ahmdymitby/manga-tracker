@@ -13,15 +13,24 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.koin.compose.KoinApplication
 import org.koin.compose.viewmodel.koinViewModel
+import uk.dominikdias.manga.di.appModule
+import uk.dominikdias.manga.di.previewDatabaseModule
+import uk.dominikdias.manga.theme.AppTheme
 import uk.dominikdias.manga.viewmodel.OrderedViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -29,6 +38,7 @@ import uk.dominikdias.manga.viewmodel.OrderedViewModel
 fun OrderedScreen(
     setTopBar: (TopBarContent) -> Unit,
     onMangaClick: (mangaId: Long) -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: OrderedViewModel = koinViewModel()
 ) {
     val isLoading by viewModel.isLoading.collectAsState()
@@ -40,7 +50,7 @@ fun OrderedScreen(
         TopAppBar(title = { Text(Ordered.title) })
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize()) {
         if (isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         }
@@ -94,6 +104,31 @@ fun OrderedScreen(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+@Preview
+private fun PreviewOrderScreen() {
+    var topBar by remember { mutableStateOf<(@Composable () -> Unit)?>(null) }
+    KoinApplication(
+        application = {
+            modules(previewDatabaseModule(), appModule())
+        }
+    ) {
+        AppTheme {
+            Scaffold(
+                topBar = {
+                    topBar?.invoke()
+                }
+            ) {
+                OrderedScreen(
+                    setTopBar = { topBar = it },
+                    onMangaClick = {},
+                    modifier = Modifier.padding(it)
+                )
             }
         }
     }

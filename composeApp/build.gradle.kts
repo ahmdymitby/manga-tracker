@@ -128,8 +128,6 @@ compose.desktop {
 }
 
 room {
-    schemaDirectory("debug", "$projectDir/schemas/debug")
-
     schemaDirectory("$projectDir/schemas")
 }
 
